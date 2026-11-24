@@ -37,10 +37,19 @@ public:
     RCLCPP_INFO(LOGGER, "Class Initialized: Pick And Place");
   }
 
+  void execute_trajectory_plan() {
+    RCLCPP_INFO(LOGGER, "Going to Pre-grasp Position...");
+    setup_goal_pose_target(+0.340, -0.020, +0.264, -1.000, +0.000, +0.000, +0.000);
+    plan_trajectory_kinematics();
+    execute_trajectory_kinematics();
+  }
+
 private:
   using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
   using JointModelGroup = moveit::core::JointModelGroup;
   using RobotStatePtr = moveit::core::RobotStatePtr;
+  using Plan = MoveGroupInterface::Plan;
+  using Pose = geometry_msgs::msg::Pose;
 
   rclcpp::Node::SharedPtr base_node_;
   rclcpp::Node::SharedPtr move_group_node_;
@@ -49,12 +58,46 @@ private:
   const JointModelGroup *joint_model_group_robot_;
   RobotStatePtr current_state_robot_;
   std::vector<double> initial_joint_positions_robot_;
+
+    Plan kinematics_trajectory_plan_;
+  Pose target_pose_robot_;
+  bool plan_success_robot_ = false;
+
+  void setup_goal_pose_target(float pos_x, float pos_y, float pos_z,
+                              float quat_x, float quat_y, float quat_z,
+                              float quat_w) {
+    target_pose_robot_.position.x = pos_x;
+    target_pose_robot_.position.y = pos_y;
+    target_pose_robot_.position.z = pos_z;
+    target_pose_robot_.orientation.x = quat_x;
+    target_pose_robot_.orientation.y = quat_y;
+    target_pose_robot_.orientation.z = quat_z;
+    target_pose_robot_.orientation.w = quat_w;
+    move_group_robot_->setPoseTarget(target_pose_robot_);
+  }
+
+  void plan_trajectory_kinematics() {
+    plan_success_robot_ =
+        (move_group_robot_->plan(kinematics_trajectory_plan_) ==
+         moveit::core::MoveItErrorCode::SUCCESS);
+  }
+
+  void execute_trajectory_kinematics() {
+    if (plan_success_robot_) {
+      move_group_robot_->execute(kinematics_trajectory_plan_);
+      RCLCPP_INFO(LOGGER, "Robot Kinematics Trajectory Success !");
+    } else {
+      RCLCPP_INFO(LOGGER, "Robot Kinematics Trajectory Failed !");
+    }
+  }
+
 };
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   std::shared_ptr<rclcpp::Node> base_node = std::make_shared<rclcpp::Node>("pick_and_place");
   PickAndPlace pick_and_place_node(base_node);
+  pick_and_place_node.execute_trajectory_plan();
   rclcpp::shutdown();
   return 0;
 }
