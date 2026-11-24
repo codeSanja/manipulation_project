@@ -6,6 +6,7 @@
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("move_group_node");
 static const std::string PLANNING_GROUP_ROBOT = "ur_manipulator";
+static const std::string PLANNING_GROUP_GRIPPER = "gripper";
 
 class PickAndPlace {
 public:
@@ -20,6 +21,7 @@ public:
     std::thread([this]() { this->executor_.spin(); }).detach();
 
     move_group_robot_ = std::make_shared<MoveGroupInterface>(move_group_node_, PLANNING_GROUP_ROBOT);
+    move_group_gripper_ = std::make_shared<MoveGroupInterface>(move_group_node_, PLANNING_GROUP_GRIPPER);
 
     RCLCPP_INFO(LOGGER, "Planning Frame: %s", move_group_robot_->getPlanningFrame().c_str());
     RCLCPP_INFO(LOGGER, "End Effector Link: %s", move_group_robot_->getEndEffectorLink().c_str());
@@ -28,6 +30,7 @@ public:
     current_state_robot_ = move_group_robot_->getCurrentState(10);
     current_state_robot_->copyJointGroupPositions(joint_model_group_robot_, initial_joint_positions_robot_);
     move_group_robot_->setStartStateToCurrentState();
+    move_group_gripper_->setStartStateToCurrentState();
 
     const std::vector<std::string> &joint_names = joint_model_group_robot_->getVariableNames();
     for (size_t i = 0; i < joint_names.size(); i++) {
@@ -42,6 +45,11 @@ public:
     setup_goal_pose_target(+0.340, -0.020, +0.264, -1.000, +0.000, +0.000, +0.000);
     plan_trajectory_kinematics();
     execute_trajectory_kinematics();
+
+    RCLCPP_INFO(LOGGER, "Opening Gripper...");
+    setup_named_pose_gripper("open");
+    plan_trajectory_gripper();
+    execute_trajectory_gripper();
   }
 
 private:
@@ -55,13 +63,16 @@ private:
   rclcpp::Node::SharedPtr move_group_node_;
   rclcpp::executors::SingleThreadedExecutor executor_;
   std::shared_ptr<MoveGroupInterface> move_group_robot_;
+  std::shared_ptr<MoveGroupInterface> move_group_gripper_;
   const JointModelGroup *joint_model_group_robot_;
   RobotStatePtr current_state_robot_;
   std::vector<double> initial_joint_positions_robot_;
 
-    Plan kinematics_trajectory_plan_;
+  Plan kinematics_trajectory_plan_;
   Pose target_pose_robot_;
   bool plan_success_robot_ = false;
+  Plan gripper_trajectory_plan_;
+  bool plan_success_gripper_ = false;
 
   void setup_goal_pose_target(float pos_x, float pos_y, float pos_z,
                               float quat_x, float quat_y, float quat_z,
@@ -91,6 +102,24 @@ private:
     }
   }
 
+  void setup_named_pose_gripper(std::string pose_name) {
+    move_group_gripper_->setNamedTarget(pose_name);
+  }
+
+  void plan_trajectory_gripper() {
+    plan_success_gripper_ =
+        (move_group_gripper_->plan(gripper_trajectory_plan_) ==
+         moveit::core::MoveItErrorCode::SUCCESS);
+  }
+
+  void execute_trajectory_gripper() {
+    if (plan_success_gripper_) {
+      move_group_gripper_->execute(gripper_trajectory_plan_);
+      RCLCPP_INFO(LOGGER, "Gripper Action Command Success !");
+    } else {
+      RCLCPP_INFO(LOGGER, "Gripper Action Command Failed !");
+    }
+  }
 };
 
 int main(int argc, char **argv) {
