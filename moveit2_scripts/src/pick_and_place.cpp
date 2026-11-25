@@ -69,9 +69,14 @@ public:
 
 
     RCLCPP_INFO(LOGGER, "Closing Gripper...");
-    setup_joint_value_gripper(+0.64);
+    setup_joint_value_gripper(+0.647);
     plan_trajectory_gripper();
     execute_trajectory_gripper();
+
+    RCLCPP_INFO(LOGGER, "Retreating...");
+    setup_waypoints_target(+0.000, +0.000, +0.090);
+    plan_trajectory_cartesian();
+    execute_trajectory_cartesian();
   }
 
 private:
