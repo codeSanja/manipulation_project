@@ -72,6 +72,7 @@ public:
     setup_joint_value_gripper(+0.61);
     plan_trajectory_gripper();
     execute_trajectory_gripper();
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     RCLCPP_INFO(LOGGER, "Retreating...");
     setup_waypoints_target(+0.000, +0.000, +0.110);
