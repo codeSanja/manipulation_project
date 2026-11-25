@@ -69,7 +69,7 @@ public:
     execute_trajectory_cartesian();
 
     RCLCPP_INFO(LOGGER, "Closing Gripper...");
-    setup_joint_value_gripper(+0.500);
+    setup_joint_value_gripper(+0.800);
     plan_trajectory_gripper();
     execute_trajectory_gripper();
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
