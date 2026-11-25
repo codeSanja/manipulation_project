@@ -1,6 +1,6 @@
 #include <moveit/move_group_interface/move_group_interface.h>
-
 #include <memory>
+#include <chrono>
 #include <thread>
 #include <vector>
 
@@ -63,18 +63,18 @@ public:
     execute_trajectory_gripper();
 
     RCLCPP_INFO(LOGGER, "Approaching object...");
-    setup_waypoints_target(+0.000, +0.000, -0.090);
+    setup_waypoints_target(+0.000, +0.000, -0.110);
     plan_trajectory_cartesian();
     execute_trajectory_cartesian();
 
 
     RCLCPP_INFO(LOGGER, "Closing Gripper...");
-    setup_joint_value_gripper(+0.647);
+    setup_joint_value_gripper(+0.61);
     plan_trajectory_gripper();
     execute_trajectory_gripper();
 
     RCLCPP_INFO(LOGGER, "Retreating...");
-    setup_waypoints_target(+0.000, +0.000, +0.090);
+    setup_waypoints_target(+0.000, +0.000, +0.110);
     plan_trajectory_cartesian();
     execute_trajectory_cartesian();
   }
