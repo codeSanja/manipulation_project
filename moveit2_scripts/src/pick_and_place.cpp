@@ -66,6 +66,12 @@ public:
     setup_waypoints_target(+0.000, +0.000, -0.090);
     plan_trajectory_cartesian();
     execute_trajectory_cartesian();
+
+
+    RCLCPP_INFO(LOGGER, "Closing Gripper...");
+    setup_joint_value_gripper(+0.64);
+    plan_trajectory_gripper();
+    execute_trajectory_gripper();
   }
 
 private:
@@ -99,6 +105,11 @@ private:
 
   void setup_named_pose_gripper(std::string pose_name) {
     move_group_gripper_->setNamedTarget(pose_name);
+  }
+
+  void setup_joint_value_gripper(float angle) {
+    move_group_gripper_->setJointValueTarget("robotiq_85_left_knuckle_joint",
+                                             angle);
   }
 
   void plan_trajectory_gripper() {
