@@ -1,6 +1,7 @@
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <memory>
 #include <chrono>
+#include <cmath>
+#include <memory>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <thread>
 #include <vector>
 
@@ -67,7 +68,6 @@ public:
     plan_trajectory_cartesian();
     execute_trajectory_cartesian();
 
-
     RCLCPP_INFO(LOGGER, "Closing Gripper...");
     setup_joint_value_gripper(+0.61);
     plan_trajectory_gripper();
@@ -77,6 +77,19 @@ public:
     setup_waypoints_target(+0.000, +0.000, +0.110);
     plan_trajectory_cartesian();
     execute_trajectory_cartesian();
+
+    RCLCPP_INFO(LOGGER, "Turning to Place Position...");
+    current_state_robot_ = move_group_robot_->getCurrentState(10);
+    current_state_robot_->copyJointGroupPositions(joint_model_group_robot_,
+                                                  joint_group_positions_robot_);
+    double pan = joint_group_positions_robot_[0];
+    double pan_target = (pan < 0.0) ? pan + M_PI : pan - M_PI;
+    setup_joint_value_target(
+        pan_target, joint_group_positions_robot_[1],
+        joint_group_positions_robot_[2], joint_group_positions_robot_[3],
+        joint_group_positions_robot_[4], joint_group_positions_robot_[5]);
+    plan_trajectory_kinematics();
+    execute_trajectory_kinematics();
   }
 
 private:
@@ -91,6 +104,17 @@ private:
     target_pose_robot_.orientation.z = quat_z;
     target_pose_robot_.orientation.w = quat_w;
     move_group_robot_->setPoseTarget(target_pose_robot_);
+  }
+
+  void setup_joint_value_target(float angle0, float angle1, float angle2,
+                                float angle3, float angle4, float angle5) {
+    joint_group_positions_robot_[0] = angle0;
+    joint_group_positions_robot_[1] = angle1;
+    joint_group_positions_robot_[2] = angle2;
+    joint_group_positions_robot_[3] = angle3;
+    joint_group_positions_robot_[4] = angle4;
+    joint_group_positions_robot_[5] = angle5;
+    move_group_robot_->setJointValueTarget(joint_group_positions_robot_);
   }
 
   void plan_trajectory_kinematics() {
@@ -172,6 +196,7 @@ private:
   const JointModelGroup *joint_model_group_robot_;
   RobotStatePtr current_state_robot_;
   std::vector<double> initial_joint_positions_robot_;
+  std::vector<double> joint_group_positions_robot_;
 
   Plan kinematics_trajectory_plan_;
   Pose target_pose_robot_;
