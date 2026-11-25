@@ -90,6 +90,23 @@ public:
         joint_group_positions_robot_[4], joint_group_positions_robot_[5]);
     plan_trajectory_kinematics();
     execute_trajectory_kinematics();
+
+
+    RCLCPP_INFO(LOGGER, "Releasing Object...");
+    setup_named_pose_gripper("open");
+    plan_trajectory_gripper();
+    execute_trajectory_gripper();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    RCLCPP_INFO(LOGGER, "Going to Initial Position...");
+    setup_joint_value_target(initial_joint_positions_robot_[0],
+                             initial_joint_positions_robot_[1],
+                             initial_joint_positions_robot_[2],
+                             initial_joint_positions_robot_[3],
+                             initial_joint_positions_robot_[4],
+                             initial_joint_positions_robot_[5]);
+    plan_trajectory_kinematics();
+    execute_trajectory_kinematics();
   }
 
 private:
