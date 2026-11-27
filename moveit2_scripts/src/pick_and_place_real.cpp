@@ -52,6 +52,7 @@ public:
     }
 
     add_table();
+    add_wall();
     RCLCPP_INFO(LOGGER, "Class Initialized: Pick And Place");
   }
 
@@ -136,6 +137,29 @@ private:
 
     bool added = planning_scene_interface_.applyCollisionObject(table);
     RCLCPP_INFO(LOGGER, "Table added: %d", added);
+  }
+
+  void add_wall() {
+    moveit_msgs::msg::CollisionObject wall;
+    wall.header.frame_id = move_group_robot_->getPlanningFrame();
+    wall.id = "wall";
+
+    shape_msgs::msg::SolidPrimitive box;
+    box.type = shape_msgs::msg::SolidPrimitive::BOX;
+    box.dimensions = {1.5, 0.02, 1.0};
+
+    geometry_msgs::msg::Pose box_pose;
+    box_pose.position.x = 0.25;
+    box_pose.position.y = 0.61;
+    box_pose.position.z = 0.49;
+    box_pose.orientation.w = 1.0;
+
+    wall.primitives.push_back(box);
+    wall.primitive_poses.push_back(box_pose);
+    wall.operation = moveit_msgs::msg::CollisionObject::ADD;
+
+    bool added = planning_scene_interface_.applyCollisionObject(wall);
+    RCLCPP_INFO(LOGGER, "Wall added: %d", added);
   }
 
   void setup_goal_pose_target(float pos_x, float pos_y, float pos_z,
