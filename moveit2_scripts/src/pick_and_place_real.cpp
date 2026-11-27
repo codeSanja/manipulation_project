@@ -122,11 +122,11 @@ private:
 
     shape_msgs::msg::SolidPrimitive box;
     box.type = shape_msgs::msg::SolidPrimitive::BOX;
-    box.dimensions = {1.0, 1.0, 0.02};
+    box.dimensions = {1.0, 0.8, 0.02};
 
     geometry_msgs::msg::Pose box_pose;
-    box_pose.position.x = 0.0;
-    box_pose.position.y = 0.0;
+    box_pose.position.x = 0.2;
+    box_pose.position.y = 0.3;
     box_pose.position.z = -0.02;
     box_pose.orientation.w = 1.0;
 
