@@ -53,6 +53,7 @@ public:
 
     add_table();
     add_wall();
+    add_tripod();
     RCLCPP_INFO(LOGGER, "Class Initialized: Pick And Place");
   }
 
@@ -160,6 +161,29 @@ private:
 
     bool added = planning_scene_interface_.applyCollisionObject(wall);
     RCLCPP_INFO(LOGGER, "Wall added: %d", added);
+  }
+
+    void add_tripod() {
+    moveit_msgs::msg::CollisionObject tripod;
+    tripod.header.frame_id = move_group_robot_->getPlanningFrame();
+    tripod.id = "tripod";
+
+    shape_msgs::msg::SolidPrimitive box;
+    box.type = shape_msgs::msg::SolidPrimitive::BOX;
+    box.dimensions = {0.4, 0.4, 0.8};
+
+    geometry_msgs::msg::Pose box_pose;
+    box_pose.position.x = 0.70;
+    box_pose.position.y = 0.25;
+    box_pose.position.z = 0.39;
+    box_pose.orientation.w = 1.0;
+
+    tripod.primitives.push_back(box);
+    tripod.primitive_poses.push_back(box_pose);
+    tripod.operation = moveit_msgs::msg::CollisionObject::ADD;
+
+    bool added = planning_scene_interface_.applyCollisionObject(tripod);
+    RCLCPP_INFO(LOGGER, "Tripod added: %d", added);
   }
 
   void setup_goal_pose_target(float pos_x, float pos_y, float pos_z,
