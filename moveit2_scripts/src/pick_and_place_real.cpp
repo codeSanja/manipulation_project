@@ -54,6 +54,7 @@ public:
     add_table();
     add_wall();
     add_tripod();
+    add_bars();
     RCLCPP_INFO(LOGGER, "Class Initialized: Pick And Place");
   }
 
@@ -136,7 +137,12 @@ private:
     table.primitive_poses.push_back(box_pose);
     table.operation = moveit_msgs::msg::CollisionObject::ADD;
 
-    bool added = planning_scene_interface_.applyCollisionObject(table);
+    std_msgs::msg::ColorRGBA color;
+    color.r = 0.80;
+    color.g = 0.80;
+    color.b = 0.80;
+    color.a = 1.0;
+    bool added = planning_scene_interface_.applyCollisionObject(table, color);
     RCLCPP_INFO(LOGGER, "Table added: %d", added);
   }
 
@@ -159,31 +165,81 @@ private:
     wall.primitive_poses.push_back(box_pose);
     wall.operation = moveit_msgs::msg::CollisionObject::ADD;
 
-    bool added = planning_scene_interface_.applyCollisionObject(wall);
+    std_msgs::msg::ColorRGBA color;
+    color.r = 0.82;
+    color.g = 0.66;
+    color.b = 0.45;
+    color.a = 0.6;
+    bool added = planning_scene_interface_.applyCollisionObject(wall, color);
     RCLCPP_INFO(LOGGER, "Wall added: %d", added);
   }
 
-    void add_tripod() {
+void add_tripod() {
     moveit_msgs::msg::CollisionObject tripod;
     tripod.header.frame_id = move_group_robot_->getPlanningFrame();
     tripod.id = "tripod";
 
-    shape_msgs::msg::SolidPrimitive box;
-    box.type = shape_msgs::msg::SolidPrimitive::BOX;
-    box.dimensions = {0.4, 0.4, 0.8};
+    shape_msgs::msg::SolidPrimitive legs;
+    legs.type = shape_msgs::msg::SolidPrimitive::CONE;
+    legs.dimensions = {0.70, 0.20};
 
-    geometry_msgs::msg::Pose box_pose;
-    box_pose.position.x = 0.70;
-    box_pose.position.y = 0.25;
-    box_pose.position.z = 0.39;
-    box_pose.orientation.w = 1.0;
+    geometry_msgs::msg::Pose legs_pose;
+    legs_pose.position.x = 0.70;
+    legs_pose.position.y = 0.10;
+    legs_pose.position.z = 0.34;
+    legs_pose.orientation.w = 1.0;
 
-    tripod.primitives.push_back(box);
-    tripod.primitive_poses.push_back(box_pose);
+    shape_msgs::msg::SolidPrimitive camera;
+    camera.type = shape_msgs::msg::SolidPrimitive::BOX;
+    camera.dimensions = {0.15, 0.20, 0.15};
+
+    geometry_msgs::msg::Pose camera_pose;
+    camera_pose.position.x = 0.70;
+    camera_pose.position.y = 0.10;
+    camera_pose.position.z = 0.765;
+    camera_pose.orientation.w = 1.0;
+
+    tripod.primitives.push_back(legs);
+    tripod.primitive_poses.push_back(legs_pose);
+    tripod.primitives.push_back(camera);
+    tripod.primitive_poses.push_back(camera_pose);
     tripod.operation = moveit_msgs::msg::CollisionObject::ADD;
 
-    bool added = planning_scene_interface_.applyCollisionObject(tripod);
+    std_msgs::msg::ColorRGBA color;
+    color.r = 0.10;
+    color.g = 0.45;
+    color.b = 0.90;
+    color.a = 1.0;
+    bool added = planning_scene_interface_.applyCollisionObject(tripod, color);
     RCLCPP_INFO(LOGGER, "Tripod added: %d", added);
+  }
+
+  void add_bars() {
+    moveit_msgs::msg::CollisionObject bars;
+    bars.header.frame_id = move_group_robot_->getPlanningFrame();
+    bars.id = "bars";
+
+    shape_msgs::msg::SolidPrimitive box;
+    box.type = shape_msgs::msg::SolidPrimitive::BOX;
+    box.dimensions = {0.20, 0.18, 0.12};
+
+    geometry_msgs::msg::Pose box_pose;
+    box_pose.position.x = 0.05;
+    box_pose.position.y = 0.40;
+    box_pose.position.z = 0.05;
+    box_pose.orientation.w = 1.0;
+
+    bars.primitives.push_back(box);
+    bars.primitive_poses.push_back(box_pose);
+    bars.operation = moveit_msgs::msg::CollisionObject::ADD;
+
+    std_msgs::msg::ColorRGBA color;
+    color.r = 0.85;
+    color.g = 0.15;
+    color.b = 0.15;
+    color.a = 1.0;
+    bool added = planning_scene_interface_.applyCollisionObject(bars, color);
+    RCLCPP_INFO(LOGGER, "Bars added: %d", added);
   }
 
   void setup_goal_pose_target(float pos_x, float pos_y, float pos_z,
@@ -286,6 +342,7 @@ private:
   rclcpp::executors::SingleThreadedExecutor executor_;
   std::shared_ptr<MoveGroupInterface> move_group_robot_;
   std::shared_ptr<MoveGroupInterface> move_group_gripper_;
+
 moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   const JointModelGroup *joint_model_group_robot_;
   RobotStatePtr current_state_robot_;
