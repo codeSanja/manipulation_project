@@ -2,6 +2,9 @@
 #include <cmath>
 #include <memory>
 #include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit_msgs/msg/collision_object.hpp>
+#include <shape_msgs/msg/solid_primitive.hpp>
 #include <thread>
 #include <vector>
 
@@ -48,6 +51,7 @@ public:
                   initial_joint_positions_robot_[i]);
     }
 
+    add_table();
     RCLCPP_INFO(LOGGER, "Class Initialized: Pick And Place");
   }
 
@@ -111,6 +115,29 @@ public:
   }
 
 private:
+  void add_table() {
+    moveit_msgs::msg::CollisionObject table;
+    table.header.frame_id = move_group_robot_->getPlanningFrame();
+    table.id = "table";
+
+    shape_msgs::msg::SolidPrimitive box;
+    box.type = shape_msgs::msg::SolidPrimitive::BOX;
+    box.dimensions = {1.0, 1.0, 0.02};
+
+    geometry_msgs::msg::Pose box_pose;
+    box_pose.position.x = 0.0;
+    box_pose.position.y = 0.0;
+    box_pose.position.z = -0.02;
+    box_pose.orientation.w = 1.0;
+
+    table.primitives.push_back(box);
+    table.primitive_poses.push_back(box_pose);
+    table.operation = moveit_msgs::msg::CollisionObject::ADD;
+
+    bool added = planning_scene_interface_.applyCollisionObject(table);
+    RCLCPP_INFO(LOGGER, "Table added: %d", added);
+  }
+
   void setup_goal_pose_target(float pos_x, float pos_y, float pos_z,
                               float quat_x, float quat_y, float quat_z,
                               float quat_w) {
@@ -211,6 +238,7 @@ private:
   rclcpp::executors::SingleThreadedExecutor executor_;
   std::shared_ptr<MoveGroupInterface> move_group_robot_;
   std::shared_ptr<MoveGroupInterface> move_group_gripper_;
+moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   const JointModelGroup *joint_model_group_robot_;
   RobotStatePtr current_state_robot_;
   std::vector<double> initial_joint_positions_robot_;
